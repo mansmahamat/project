@@ -129,16 +129,13 @@ export default function OnboardingScreen() {
 
       console.log('🚀 User profile to save:', userProfile);
       
-      // Update the store
+      // Update the store and wait for it to complete
       completeOnboarding(userProfile);
-      console.log('🚀 Store updated, waiting before navigation...');
+      console.log('🚀 Store updated, navigating to main app...');
       
-      // Wait a bit to ensure state is persisted, then navigate
-      setTimeout(() => {
-        console.log('🚀 NAVIGATING TO MAIN APP');
-        setCompletingOnboarding(false); // Clear flag
-        router.replace('/(tabs)');
-      }, 500);
+      // Navigate immediately - no need for delay
+      setCompletingOnboarding(false); // Clear flag
+      router.replace('/(tabs)');
       
     } catch (error) {
       console.error('🚀 Onboarding completion failed:', error);

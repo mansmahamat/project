@@ -22,11 +22,12 @@ import { useProgressStore } from '@/stores';
 import { useOnboardingStore } from '@/stores';
 import { RevenueCatContext } from '@/hooks/useRevenueCat';
 import PaywallModal from '@/components/PaywallModal';
-import { router } from 'expo-router';
 import { TestPaywallButton } from '@/components/TestPaywallButton';
 import Paywall from '@/components/payment/paywall';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { getWeeklyStats, progress } = useProgressStore();
   const { customWorkouts } = useCustomWorkoutStore();
   const { isOnboardingComplete, shouldShowPaywallAfterOnboarding, completeOnboarding } = useOnboardingStore();
@@ -34,23 +35,24 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [quickStartVisible, setQuickStartVisible] = useState(true);
   
-  // Get RevenueCat subscription status
-  const { customerInfo } = useContext(RevenueCatContext);
+  // Get RevenueCat subscription status with null check
+  const revenueCatContext = useContext(RevenueCatContext);
+  const customerInfo = revenueCatContext?.customerInfo;
   const activeEntitlements = customerInfo?.activeSubscriptions;
   const isPro = !!activeEntitlements?.length;
 
-  // Workout data
-  const featuredWorkouts = getFeaturedWorkouts().slice(0, 4);
-  const popularWorkouts = getPopularWorkouts().slice(0, 4);
+  // Workout data with null safety
+  const featuredWorkouts = getFeaturedWorkouts()?.slice(0, 4) || [];
+  const popularWorkouts = getPopularWorkouts()?.slice(0, 4) || [];
 
-  // Progress data  
-  const weeklyStats = getWeeklyStats();
+  // Progress data with fallback
+  const weeklyStats = getWeeklyStats() || { workouts: 0, time: 0, calories: 0 };
 
-  // Beginner-friendly combos
-  const beginnerCombos = COMBOS.filter(combo => combo.level === 'Beginner').slice(0, 3);
+  // Beginner-friendly combos with safety
+  const beginnerCombos = COMBOS?.filter(combo => combo?.level === 'Beginner')?.slice(0, 3) || [];
 
-  // Recent custom workouts (limit to 3)
-  const recentCustomWorkouts = customWorkouts.slice(0, 3);
+  // Recent custom workouts (limit to 3) with safety
+  const recentCustomWorkouts = (customWorkouts || []).slice(0, 3);
 
   // Show paywall after onboarding if needed
   useEffect(() => {
@@ -60,69 +62,115 @@ export default function HomeScreen() {
   }, [shouldShowPaywallAfterOnboarding, isOnboardingComplete]);
 
   const handleWorkoutPress = (workoutId: string) => {
-    // Check if workout is premium
-    const workout = workouts.find(w => w.id === workoutId);
-    if (workout?.premium && !isPro) {
-      // Show paywall only if user doesn't have premium access
-      setShowPaywall(true);
-      return;
+    try {
+      if (!workoutId) return;
+      
+      // Check if workout is premium
+      const workout = workouts?.find(w => w?.id === workoutId);
+      if (workout?.premium && !isPro) {
+        // Show paywall only if user doesn't have premium access
+        setShowPaywall(true);
+        return;
+      }
+      router.push(`/workout-detail?id=${workoutId}`);
+    } catch (error) {
+      console.warn('Workout press error:', error);
     }
-    router.push(`/workout-detail?id=${workoutId}`);
   };
 
   const handleComboPress = (comboId: string) => {
-    // For featured combos, go directly to 3-minute timed workouts
-    if (comboId === 'jab-cross') {
-      router.push('/timed-workout-player?id=jab-cross-focus');
-    } else if (comboId === 'jab-jab-cross') {
-      router.push('/timed-workout-player?id=jab-jab-cross-focus');
-    } else if (comboId === 'jab-cross-hook') {
-      router.push('/timed-workout-player?id=jab-cross-hook-focus');
-    } else {
-      // For other combos, go to detail page first
-      router.push(`/combo-detail?id=${comboId}`);
+    try {
+      if (!comboId) return;
+      
+      // For featured combos, go directly to 3-minute timed workouts
+      if (comboId === 'jab-cross') {
+        router.push('/timed-workout-player?id=jab-cross-focus');
+      } else if (comboId === 'jab-jab-cross') {
+        router.push('/timed-workout-player?id=jab-jab-cross-focus');
+      } else if (comboId === 'jab-cross-hook') {
+        router.push('/timed-workout-player?id=jab-cross-hook-focus');
+      } else {
+        // For other combos, go to detail page first
+        router.push(`/combo-detail?id=${comboId}`);
+      }
+    } catch (error) {
+      console.warn('Combo press error:', error);
     }
   };
 
   const handleTechniquePress = (techniqueId: number) => {
-    router.push(`/technique-detail?id=${techniqueId}`);
+    try {
+      if (!techniqueId) return;
+      router.push(`/technique-detail?id=${techniqueId}`);
+    } catch (error) {
+      console.warn('Technique press error:', error);
+    }
   };
 
   const handleCreateCustomWorkout = () => {
-    if (!isPro) {
-      setShowPaywall(true);
-      return;
+    try {
+      if (!isPro) {
+        setShowPaywall(true);
+        return;
+      }
+      router.push('/custom-workout');
+    } catch (error) {
+      console.warn('Create custom workout error:', error);
     }
-    router.push('/custom-workout');
   };
 
   const handleCustomWorkoutPress = (workoutId: string) => {
-    router.push(`/workout-detail?id=${workoutId}`);
+    try {
+      if (!workoutId) return;
+      router.push(`/workout-detail?id=${workoutId}`);
+    } catch (error) {
+      console.warn('Custom workout press error:', error);
+    }
   };
 
   const handleTutorials = () => {
-    router.push('/punch-library');
+    try {
+      router.push('/punch-library');
+    } catch (error) {
+      console.warn('Tutorials press error:', error);
+    }
   };
 
   const handleViewAllCombos = () => {
-    router.push('/combos');
+    try {
+      router.push('/combos');
+    } catch (error) {
+      console.warn('View all combos error:', error);
+    }
   };
 
   const handleQuickStart = () => {
-    router.push('/quick-start');
+    try {
+      router.push('/quick-start');
+    } catch (error) {
+      console.warn('Quick start error:', error);
+    }
   };
 
-  const filteredWorkouts = workouts.filter(workout =>
-    workout.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    workout.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Safe data filtering
+  const filteredWorkouts = (workouts || []).filter(workout => {
+    if (!workout?.title || !workout?.description) return false;
+    return workout.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           workout.description.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
-  // Tutorial category stats
-  const tutorialStats = {
-    punches: getTechniquesByCategory('Punch').length,
-    defense: getTechniquesByCategory('Defense').length,
-    footwork: getTechniquesByCategory('Footwork').length,
-  };
+  // Tutorial category stats with error handling
+  let tutorialStats;
+  try {
+    tutorialStats = {
+      punches: getTechniquesByCategory('Punch')?.length || 0,
+      defense: getTechniquesByCategory('Defense')?.length || 0,
+      footwork: getTechniquesByCategory('Footwork')?.length || 0,
+    };
+  } catch (error) {
+    console.warn('Tutorial stats error:', error);
+    tutorialStats = { punches: 0, defense: 0, footwork: 0 };
+  }
 
   if (showPaywall) {
     return (
@@ -138,6 +186,8 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      
+
       
       <ScrollView showsVerticalScrollIndicator={false} bounces={true}>
         {/* Hero Header */}
@@ -187,8 +237,8 @@ export default function HomeScreen() {
               {/* Right Section: Stats & Arrow */}
               <View style={styles.miniRightSection}>
                 <View style={styles.miniStats}>
-                  <Text style={styles.miniStatNumber}>{getTotalDuration()}min</Text>
-                  <Text style={styles.miniStatLabel}>{getTotalInstructions()} techniques</Text>
+                  <Text style={styles.miniStatNumber}>{getTotalDuration?.() || 0}min</Text>
+                  <Text style={styles.miniStatLabel}>{getTotalInstructions?.() || 0} techniques</Text>
                 </View>
                 <ChevronRight size={18} color="#6B7280" />
               </View>
@@ -234,7 +284,7 @@ export default function HomeScreen() {
               <View style={styles.statIconContainer}>
                 <Calendar size={20} color="#8B5CF6" />
               </View>
-              <Text style={styles.statValue}>{progress.currentStreak}</Text>
+              <Text style={styles.statValue}>{progress?.currentStreak || 0}</Text>
               <Text style={styles.statLabel}>Day Streak</Text>
               <Text style={styles.statChange}>Keep it up!</Text>
             </View>

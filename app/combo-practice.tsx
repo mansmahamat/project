@@ -25,7 +25,7 @@ export default function ComboPracticeScreen() {
   const [currentPunchIndex, setCurrentPunchIndex] = useState(0);
   const [totalPracticeTime, setTotalPracticeTime] = useState(0);
   
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | number | null>(null);
 
   useEffect(() => {
     if (id) {

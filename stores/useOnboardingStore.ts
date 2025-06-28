@@ -27,6 +27,7 @@ interface OnboardingState {
   updateUserProfile: (profile: UserProfile) => void;
   resetOnboarding: () => void;
   setShouldShowPaywallAfterOnboarding: (show: boolean) => void;
+  debugCurrentState: () => OnboardingState;
   
   // Computed values
   calculateBMR: () => number | null;
@@ -53,7 +54,7 @@ export const useOnboardingStore = create<OnboardingState>()(
 
       completeOnboarding: (profile: UserProfile) => {
         console.log('🎯 Zustand: COMPLETING ONBOARDING');
-        console.log('Profile:', profile);
+        console.log('🎯 Profile received:', profile);
         
         const newState = { 
           isOnboardingComplete: true, 
@@ -62,18 +63,27 @@ export const useOnboardingStore = create<OnboardingState>()(
           shouldShowPaywallAfterOnboarding: true
         };
         
-        console.log('🎯 Zustand: NEW STATE:', newState);
+        console.log('🎯 Zustand: Setting new state:', newState);
         set(newState);
         
-        // Verify state was set
+        // Force verification of state change
         setTimeout(() => {
           const currentState = get();
-          console.log('🎯 Zustand: VERIFICATION - Current state after completion:', {
+          console.log('🎯 Zustand: VERIFICATION CHECK:', {
             isOnboardingComplete: currentState.isOnboardingComplete,
             hasProfile: !!currentState.userProfile,
-            shouldShowPaywall: currentState.shouldShowPaywallAfterOnboarding
+            profileData: currentState.userProfile,
+            shouldShowPaywall: currentState.shouldShowPaywallAfterOnboarding,
+            isLoading: currentState.isLoading
           });
-        }, 100);
+          
+          // Double-check AsyncStorage directly
+          AsyncStorage.getItem('onboarding-store').then(stored => {
+            console.log('🎯 AsyncStorage verification:', stored);
+          }).catch(err => {
+            console.error('🎯 AsyncStorage error:', err);
+          });
+        }, 50);
       },
 
       updateUserProfile: (profile: UserProfile) => {
@@ -81,13 +91,24 @@ export const useOnboardingStore = create<OnboardingState>()(
       },
 
       resetOnboarding: () => {
-        console.log('Zustand: Resetting onboarding');
-        set({ 
+        console.log('🎯 Zustand: RESETTING ONBOARDING');
+        const resetState = { 
           isOnboardingComplete: false, 
           userProfile: null,
           isLoading: false,
           shouldShowPaywallAfterOnboarding: false
-        });
+        };
+        console.log('🎯 Zustand: Setting reset state:', resetState);
+        set(resetState);
+        
+        // Verify reset
+        setTimeout(() => {
+          const currentState = get();
+          console.log('🎯 Zustand: RESET VERIFICATION:', {
+            isOnboardingComplete: currentState.isOnboardingComplete,
+            hasProfile: !!currentState.userProfile,
+          });
+        }, 50);
       },
 
       setShouldShowPaywallAfterOnboarding: (show: boolean) => {
@@ -201,6 +222,27 @@ export const useOnboardingStore = create<OnboardingState>()(
         if (experience === 'beginner' && fitnessLevel === 'high') return 'Intermediate';
         
         return 'Beginner';
+      },
+
+      // Debug function to check current state
+      debugCurrentState: () => {
+        const currentState = get();
+        console.log('🎯 CURRENT ONBOARDING STATE:', {
+          isOnboardingComplete: currentState.isOnboardingComplete,
+          hasProfile: !!currentState.userProfile,
+          profileData: currentState.userProfile,
+          isLoading: currentState.isLoading,
+          shouldShowPaywall: currentState.shouldShowPaywallAfterOnboarding
+        });
+        
+        // Also check AsyncStorage
+        AsyncStorage.getItem('onboarding-store').then(stored => {
+          console.log('🎯 ASYNCSTORAGE STATE:', stored);
+        }).catch(err => {
+          console.error('🎯 AsyncStorage error:', err);
+        });
+        
+        return currentState;
       },
     }),
     {

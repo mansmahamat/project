@@ -24,6 +24,28 @@ export default function ProfileScreen() {
     achievements: [],
     favoriteWorkouts: [],
     completedWorkouts: [],
+    totalXP: 0,
+    currentLevel: 1,
+    dailyChallenges: [],
+    weeklyGoal: {
+      workouts: 0,
+      target: 3,
+      xpReward: 100,
+    },
+    unlockedTitles: [],
+    selectedTitle: undefined,
+    stats: {
+      workoutsByCategory: {},
+      workoutsByLevel: {},
+      workoutsByTime: { morning: 0, afternoon: 0, evening: 0, night: 0 },
+      techniquesWatched: [],
+      combosLearned: [],
+      customWorkoutsCreated: 0,
+      longestSession: 0,
+      shortestSession: 0,
+      averageCaloriesPerWorkout: 0,
+      totalRounds: 0,
+    },
   });
 
   useEffect(() => {

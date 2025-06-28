@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Alert, ScrollView, Dimensions } from 'react-native';
-import { Calendar, TrendingUp, Target, Flame, Clock, Trophy, Award, Zap, Activity, CalendarDays, Lock, Crown } from 'lucide-react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Alert, ScrollView, Dimensions, SafeAreaView } from 'react-native';
+import { Calendar, TrendingUp, Target, Flame, Clock, Trophy, Award, Zap, Activity, CalendarDays, Lock, Crown, X } from 'lucide-react-native';
 import RevenueCatUI, { type FullScreenPaywallViewOptions } from "react-native-purchases-ui";
 import { type CustomerInfo, type PurchasesError, type PurchasesPackage, type PurchasesStoreTransaction } from "react-native-purchases";
 import { useSimpleToast } from "@/hooks/useSimpleToast";
@@ -134,22 +134,35 @@ const Paywall = ({ onClose, ...paywallProps }: PaywallProps) => {
 
   return (
     <PaywallErrorBoundary onError={onClose}>
-      <View style={styles.container}>
-        {/* RevenueCat Paywall - Full Screen */}
-        <RevenueCatUI.Paywall
-          onDismiss={handleDismiss}
-          onPurchaseCancelled={handlePurchaseCancelled}
-          onPurchaseCompleted={handlePurchaseCompleted}
-          onRestoreError={handleRestoreError}
-          onRestoreCompleted={handleRestoreCompleted}
-          onPurchaseError={handlePurchaseError}
-          options={{
-            displayCloseButton: true,
-            ...paywallProps.options
-          }}
-          {...paywallProps}
-        />
-      </View>
+      <SafeAreaView style={styles.safeContainer}>
+        <View style={styles.container}>
+          {/* Custom Close Button - More Accessible Position */}
+          <TouchableOpacity 
+            style={styles.customCloseButton}
+            onPress={handleDismiss}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <View style={styles.closeButtonBackground}>
+              <X size={20} color="#fff" />
+            </View>
+          </TouchableOpacity>
+
+          {/* RevenueCat Paywall - Full Screen */}
+          <RevenueCatUI.Paywall
+            onDismiss={handleDismiss}
+            onPurchaseCancelled={handlePurchaseCancelled}
+            onPurchaseCompleted={handlePurchaseCompleted}
+            onRestoreError={handleRestoreError}
+            onRestoreCompleted={handleRestoreCompleted}
+            onPurchaseError={handlePurchaseError}
+            options={{
+              displayCloseButton: false, // Disable default close button since we have custom one
+              ...paywallProps.options
+            }}
+            {...paywallProps}
+          />
+        </View>
+      </SafeAreaView>
     </PaywallErrorBoundary>
   )
 }
@@ -396,8 +409,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
+  safeContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  customCloseButton: {
+    position: 'absolute',
+    top: 60, // Move it lower from the very top for better accessibility
+    right: 20,
+    zIndex: 1000, // Ensure it's always on top
+    padding: 4, // Reduce outer padding since we have larger background
+  },
+  closeButtonBackground: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Higher contrast for better visibility
+    borderRadius: 20,
+    padding: 12, // Larger touch target for easier tapping
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5, // Android shadow
+  },
 });
-
-
 
 export default Paywall; 

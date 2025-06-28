@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { useOnboardingStore, useNavigationStore } from '@/stores';
@@ -9,21 +9,22 @@ interface OnboardingGateProps {
 
 export default function OnboardingGate({ children }: OnboardingGateProps) {
   const isOnboardingComplete = useOnboardingStore((state) => state.isOnboardingComplete);
-  const setLoading = useOnboardingStore((state) => state.setLoading);
   const isCompletingOnboarding = useNavigationStore((state) => state.isCompletingOnboarding);
   const router = useRouter();
   const segments = useSegments();
-  const [isInitialized, setIsInitialized] = React.useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Small delay to ensure Zustand persistence has loaded
-    setTimeout(() => {
-      setIsInitialized(true);
-    }, 200);
+    // Give Zustand persistence time to rehydrate (shorter delay)
+    const timer = setTimeout(() => {
+      setIsReady(true);
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    if (!isInitialized) return; // Wait for initialization
+    if (!isReady) return; // Wait for initialization
 
     const inOnboarding = segments[0] === 'onboarding';
     
@@ -32,7 +33,7 @@ export default function OnboardingGate({ children }: OnboardingGateProps) {
       inOnboarding,
       isCompletingOnboarding,
       segments: segments.join('/'),
-      isInitialized
+      isReady
     });
 
     // DO NOT interfere if currently completing onboarding
@@ -41,22 +42,19 @@ export default function OnboardingGate({ children }: OnboardingGateProps) {
       return;
     }
 
-    // ONLY redirect new users to onboarding, never interfere with completed users or onboarding process
-    if (isOnboardingComplete === false && !inOnboarding && segments.length > 0) {
-      console.log('NEW USER: Redirecting to onboarding...');
+    // Only redirect to onboarding if user hasn't completed it AND isn't already there
+    if (isOnboardingComplete === false && !inOnboarding) {
+      console.log('🔄 OnboardingGate: Redirecting to onboarding...');
       router.replace('/onboarding');
-    } else {
-      console.log('OnboardingGate: NOT redirecting - user is completed or onboarding');
     }
-    // Never redirect users who have completed onboarding or are currently onboarding
-  }, [isOnboardingComplete, isInitialized, segments, router]);
+  }, [isOnboardingComplete, isReady, segments, isCompletingOnboarding, router]);
 
-  // Show loading screen while initializing
-  if (!isInitialized) {
+  // Show minimal loading only during initial setup
+  if (!isReady) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#FF6B35" />
-        <Text style={styles.loadingText}>Loading your boxing profile...</Text>
+        <Text style={styles.loadingText}>Initializing...</Text>
       </View>
     );
   }
