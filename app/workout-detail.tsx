@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -13,14 +13,22 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { workouts } from '@/data/workouts';
 import { useCustomWorkoutStore } from '@/stores';
 import { Workout } from '@/types/workout';
+import { RevenueCatContext } from '@/hooks/useRevenueCat';
+import Paywall from '@/components/payment/paywall';
 
 export default function WorkoutDetailScreen() {
   const { id } = useLocalSearchParams();
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   
   // Get custom workouts from store
   const { customWorkouts } = useCustomWorkoutStore();
+  
+  // Get RevenueCat subscription status
+  const { customerInfo } = useContext(RevenueCatContext);
+  const activeEntitlements = customerInfo?.activeSubscriptions;
+  const isPro = !!activeEntitlements?.length;
 
   useEffect(() => {
     if (id) {
@@ -47,8 +55,14 @@ export default function WorkoutDetailScreen() {
       }
       
       setWorkout(foundWorkout || null);
+      
+      // Check if workout is premium or custom workout and user doesn't have access
+      const isCustomWorkout = customWorkouts.some(w => w.id === id);
+      if ((foundWorkout?.premium && !isPro) || (isCustomWorkout && !isPro)) {
+        setShowPaywall(true);
+      }
     }
-  }, [id, customWorkouts]);
+  }, [id, customWorkouts, isPro]);
 
   if (!workout) {
     return (
@@ -64,8 +78,6 @@ export default function WorkoutDetailScreen() {
     // Use unified timed workout player for all workouts
     router.push(`/timed-workout-player?id=${workout.id}`);
   };
-
-
 
   const handleBack = () => {
     router.back();
@@ -84,7 +96,21 @@ export default function WorkoutDetailScreen() {
     }
   };
 
-
+  // Show paywall if needed
+  if (showPaywall) {
+    return (
+      <Paywall
+        onClose={() => {
+          setShowPaywall(false);
+          router.back(); // Go back if user closes paywall
+        }}
+        onRestoreCompleted={() => setShowPaywall(false)}
+        onPurchaseError={() => setShowPaywall(false)}
+        onPurchaseCompleted={() => setShowPaywall(false)}
+        onPurchaseCancelled={() => setShowPaywall(false)}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -139,8 +165,6 @@ export default function WorkoutDetailScreen() {
               <Text style={styles.statLabel}>calories</Text>
             </View>
           </View>
-
-
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Description</Text>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import {
   View,
   Text,
@@ -12,14 +12,20 @@ import { WorkoutCard } from '@/components/WorkoutCard';
 import { workouts, getWorkoutsByCategory, getWorkoutsByLevel } from '@/data/workouts';
 import { useCustomWorkoutStore } from '@/stores';
 import { router, useLocalSearchParams } from 'expo-router';
+import Paywall from '@/components/payment/paywall';
+import { RevenueCatContext } from '@/hooks/useRevenueCat';
 
 export default function WorkoutsScreen() {
   const { category: initialCategory } = useLocalSearchParams();
   const customWorkouts = useCustomWorkoutStore((state) => state.customWorkouts);
   const [selectedLevel, setSelectedLevel] = useState<string>('All');
-  const [selectedCategory, setSelectedCategory] = useState<string>(
-    typeof initialCategory === 'string' ? initialCategory : 'All'
-  );
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [showPaywall, setShowPaywall] = useState(false);
+  
+  // Get RevenueCat subscription status
+  const { customerInfo } = useContext(RevenueCatContext);
+  const activeEntitlements = customerInfo?.activeSubscriptions;
+  const isPro = !!activeEntitlements?.length;
   
   // Convert custom workouts to regular workout format for display (memoized to prevent infinite loops)
   const convertedCustomWorkouts = useMemo(() => {
@@ -38,7 +44,11 @@ export default function WorkoutsScreen() {
   
   // Combine custom workouts with regular workouts (memoized to prevent infinite loops)
   const allWorkouts = useMemo(() => {
-    return [...workouts, ...convertedCustomWorkouts];
+    console.log('🔍 Debug: Regular workouts count:', workouts.length);
+    console.log('🔍 Debug: Custom workouts count:', convertedCustomWorkouts.length);
+    const combined = [...workouts, ...convertedCustomWorkouts];
+    console.log('🔍 Debug: All workouts count:', combined.length);
+    return combined;
   }, [convertedCustomWorkouts]);
   
   const [filteredWorkouts, setFilteredWorkouts] = useState(() => allWorkouts);
@@ -48,7 +58,11 @@ export default function WorkoutsScreen() {
 
   useEffect(() => {
     let filtered = allWorkouts;
+    console.log('🔍 Debug: Starting with workouts:', filtered.length);
+    console.log('🔍 Debug: Selected category:', selectedCategory);
+    console.log('🔍 Debug: Selected level:', selectedLevel);
 
+    // Only filter if NOT 'All'
     if (selectedCategory !== 'All') {
       if (selectedCategory === 'Custom') {
         // Filter for custom workouts
@@ -56,20 +70,51 @@ export default function WorkoutsScreen() {
           customWorkouts.some(custom => custom.id === workout.id)
         );
       } else {
+        // Check actual workout categories in data
+        console.log('🔍 Debug: Available categories in workouts:', 
+          [...new Set(allWorkouts.map(w => w.category))]);
         filtered = filtered.filter(workout => workout.category === selectedCategory);
       }
+      console.log('🔍 Debug: After category filter:', filtered.length);
     }
 
     if (selectedLevel !== 'All') {
       filtered = filtered.filter(workout => workout.level === selectedLevel);
+      console.log('🔍 Debug: After level filter:', filtered.length);
     }
 
+    console.log('🔍 Debug: Final filtered workouts:', filtered.length);
+    
+    // Remove the temporary fix since we're fixing the real issue
     setFilteredWorkouts(filtered);
-  }, [selectedLevel, selectedCategory, allWorkouts]);
+  }, [selectedLevel, selectedCategory, allWorkouts, customWorkouts]);
 
   const handleWorkoutPress = (workoutId: string) => {
+    // Check if workout is premium
+    const workout = workouts.find(w => w.id === workoutId);
+    const customWorkout = customWorkouts.find(w => w.id === workoutId);
+    
+    // Show paywall for premium workouts or any custom workout if user isn't premium
+    if ((workout?.premium && !isPro) || (customWorkout && !isPro)) {
+      setShowPaywall(true);
+      return;
+    }
+    
     router.push(`/workout-detail?id=${workoutId}`);
   };
+
+  // Show paywall if needed
+  if (showPaywall) {
+    return (
+      <Paywall
+        onClose={() => setShowPaywall(false)}
+        onRestoreCompleted={() => setShowPaywall(false)}
+        onPurchaseError={() => setShowPaywall(false)}
+        onPurchaseCompleted={() => setShowPaywall(false)}
+        onPurchaseCancelled={() => setShowPaywall(false)}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -82,7 +127,13 @@ export default function WorkoutsScreen() {
         <View style={styles.headerButtons}>
           <TouchableOpacity 
             style={styles.createButton}
-            onPress={() => router.push('/custom-workout')}
+            onPress={() => {
+              if (!isPro) {
+                setShowPaywall(true);
+                return;
+              }
+              router.push('/custom-workout');
+            }}
           >
             <Plus size={20} color="#FFFFFF" />
           </TouchableOpacity>
@@ -161,13 +212,19 @@ export default function WorkoutsScreen() {
           </View>
         </View>
 
-        {filteredWorkouts.map((workout) => (
-          <WorkoutCard
-            key={workout.id}
-            workout={workout}
-            onPress={() => handleWorkoutPress(workout.id)}
-          />
-        ))}
+        {filteredWorkouts.map((workout) => {
+          // Check if this is a custom workout
+          const isCustomWorkout = customWorkouts.some(custom => custom.id === workout.id);
+          
+          return (
+            <WorkoutCard
+              key={workout.id}
+              workout={workout}
+              onPress={() => handleWorkoutPress(workout.id)}
+              isCustom={isCustomWorkout}
+            />
+          );
+        })}
 
         {filteredWorkouts.length === 0 && (
           <View style={styles.noResults}>

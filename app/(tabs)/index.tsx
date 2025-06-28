@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -8,8 +8,9 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Image,
+  Dimensions,
 } from 'react-native';
-import { Search, TrendingUp, Star, Plus, Target, BookOpen, GraduationCap, Activity, Zap, Trophy, Calendar, Play, ChevronRight, Video, Shield, Move, Clock, User, X } from 'lucide-react-native';
+import { Search, TrendingUp, Star, Plus, Target, BookOpen, GraduationCap, Activity, Zap, Trophy, Calendar, Play, ChevronRight, Video, Shield, Move, Clock, User, X, Crown } from 'lucide-react-native';
 import { WorkoutCard } from '@/components/WorkoutCard';
 import { ComboCard } from '@/components/ComboCard';
 import { TechniqueCard } from '@/components/TechniqueCard';
@@ -18,26 +19,54 @@ import { COMBOS, getCombosByLevel } from '@/data/punches';
 import { TECHNIQUE_REFERENCES, getTechniquesByCategory } from '@/data/techniques';
 import { useCustomWorkoutStore } from '@/stores/useCustomWorkoutStore';
 import { useProgressStore } from '@/stores';
+import { useOnboardingStore } from '@/stores';
+import { RevenueCatContext } from '@/hooks/useRevenueCat';
+import PaywallModal from '@/components/PaywallModal';
 import { router } from 'expo-router';
+import { TestPaywallButton } from '@/components/TestPaywallButton';
+import Paywall from '@/components/payment/paywall';
 
 export default function HomeScreen() {
+  const { getWeeklyStats, progress } = useProgressStore();
+  const { customWorkouts } = useCustomWorkoutStore();
+  const { isOnboardingComplete, shouldShowPaywallAfterOnboarding, completeOnboarding } = useOnboardingStore();
+  const [showPaywall, setShowPaywall] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [quickStartVisible, setQuickStartVisible] = useState(true);
   
-  const featuredWorkouts = getFeaturedWorkouts();
-  const popularWorkouts = getPopularWorkouts();
-  const beginnerCombos = getCombosByLevel('Beginner').slice(0, 3);
-  const featuredTechniques = TECHNIQUE_REFERENCES.slice(0, 4);
-  
-  // Get custom workouts
-  const { customWorkouts } = useCustomWorkoutStore();
-  const recentCustomWorkouts = customWorkouts.slice(0, 3); // Show most recent 3
-  
-  // Get REAL progress data from store
-  const { progress, getWeeklyStats } = useProgressStore();
+  // Get RevenueCat subscription status
+  const { customerInfo } = useContext(RevenueCatContext);
+  const activeEntitlements = customerInfo?.activeSubscriptions;
+  const isPro = !!activeEntitlements?.length;
+
+  // Workout data
+  const featuredWorkouts = getFeaturedWorkouts().slice(0, 4);
+  const popularWorkouts = getPopularWorkouts().slice(0, 4);
+
+  // Progress data  
   const weeklyStats = getWeeklyStats();
 
+  // Beginner-friendly combos
+  const beginnerCombos = COMBOS.filter(combo => combo.level === 'Beginner').slice(0, 3);
+
+  // Recent custom workouts (limit to 3)
+  const recentCustomWorkouts = customWorkouts.slice(0, 3);
+
+  // Show paywall after onboarding if needed
+  useEffect(() => {
+    if (shouldShowPaywallAfterOnboarding && isOnboardingComplete) {
+      setShowPaywall(true);
+    }
+  }, [shouldShowPaywallAfterOnboarding, isOnboardingComplete]);
+
   const handleWorkoutPress = (workoutId: string) => {
+    // Check if workout is premium
+    const workout = workouts.find(w => w.id === workoutId);
+    if (workout?.premium && !isPro) {
+      // Show paywall only if user doesn't have premium access
+      setShowPaywall(true);
+      return;
+    }
     router.push(`/workout-detail?id=${workoutId}`);
   };
 
@@ -60,6 +89,10 @@ export default function HomeScreen() {
   };
 
   const handleCreateCustomWorkout = () => {
+    if (!isPro) {
+      setShowPaywall(true);
+      return;
+    }
     router.push('/custom-workout');
   };
 
@@ -91,8 +124,21 @@ export default function HomeScreen() {
     footwork: getTechniquesByCategory('Footwork').length,
   };
 
+  if (showPaywall) {
+    return (
+      <Paywall
+        onClose={() => setShowPaywall(false)}
+        onRestoreCompleted={() => setShowPaywall(false)}
+        onPurchaseError={() => setShowPaywall(false)}
+        onPurchaseCompleted={() => setShowPaywall(false)}
+        onPurchaseCancelled={() => setShowPaywall(false)}
+      />
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
+      
       <ScrollView showsVerticalScrollIndicator={false} bounces={true}>
         {/* Hero Header */}
         {/* <View style={styles.heroHeader}>
@@ -287,42 +333,24 @@ export default function HomeScreen() {
               </View>
             )}
 
-            {/* Featured Techniques Preview */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionTitleRow}>
-                  <Video size={20} color="#FF6B35" />
-                  <Text style={styles.sectionTitle}>Featured Techniques</Text>
-                </View>
-                <TouchableOpacity onPress={handleTutorials}>
-                  <Text style={styles.viewAllText}>View All</Text>
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.sectionSubtitle}>All include video demos</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-                {featuredTechniques.map((technique) => (
-                  <TechniqueCard
-                    key={technique.id}
-                    technique={technique}
-                    onPress={() => handleTechniquePress(technique.id)}
-                    size="small"
-                  />
-                ))}
-              </ScrollView>
-            </View>
+        
 
             {/* Quick Actions */}
             <View style={styles.quickActionsSection}>
               <Text style={styles.sectionTitle}>Quick Start</Text>
               <View style={styles.quickActionsGrid}>
                 <TouchableOpacity
-                  style={styles.quickActionCard}
+                  style={[styles.quickActionCard, styles.premiumCard]}
                   onPress={handleCreateCustomWorkout}
                 >
                   <View style={[styles.quickActionIcon, { backgroundColor: '#FF6B35' }]}>
                     <Plus size={24} color="#fff" />
                   </View>
-                  <Text style={styles.quickActionTitle}>Custom Workout</Text>
+                  <View style={styles.quickActionPremiumBadge}>
+                    <Crown size={12} color="#000" />
+                    <Text style={styles.quickActionPremiumBadgeText}>PREMIUM</Text>
+                  </View>
+                  <Text style={[styles.quickActionTitle, styles.quickActionPremiumTitle]}>Custom Workout</Text>
                   <Text style={styles.quickActionSubtitle}>Build your own</Text>
                 </TouchableOpacity>
                 
@@ -338,6 +366,21 @@ export default function HomeScreen() {
                   <Text style={[styles.quickActionTitle, styles.newFeatureTitle]}>🥊 3-MIN ROUNDS</Text>
                   <Text style={styles.quickActionSubtitle}>Real boxing coach</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.quickActionCard, styles.premiumCard]}
+                  onPress={() => setShowPaywall(true)}
+                >
+                  <View style={[styles.quickActionIcon, { backgroundColor: '#FFD700' }]}>
+                    <Crown size={24} color="#fff" />
+                  </View>
+                  <Text style={[styles.quickActionTitle, styles.quickActionPremiumTitle]}>👑 PREMIUM</Text>
+                  <Text style={styles.quickActionSubtitle}>Unlock everything</Text>
+                </TouchableOpacity>
+
+               
+
+               
               </View>
             </View>
 
@@ -391,14 +434,42 @@ export default function HomeScreen() {
                   <TrendingUp size={20} color="#8B5CF6" />
                   <Text style={styles.sectionTitle}>Trending</Text>
                 </View>
+                <TouchableOpacity onPress={() => router.push('/workouts')}>
+                  <Text style={styles.seeAllText}>See all</Text>
+                </TouchableOpacity>
               </View>
-              {popularWorkouts.map((workout) => (
-                <WorkoutCard
-                  key={workout.id}
-                  workout={workout}
-                  onPress={() => handleWorkoutPress(workout.id)}
-                />
-              ))}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+                {popularWorkouts.map((workout) => (
+                  <View key={workout.id} style={styles.workoutCardWrapper}>
+                    <WorkoutCard 
+                      workout={workout} 
+                      size="small"
+                      onPress={() => handleWorkoutPress(workout.id)}
+                    />
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Premium Workouts Section */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>👑 Premium Workouts</Text>
+                <TouchableOpacity onPress={() => router.push('/workouts?category=Premium')}>
+                  <Text style={styles.seeAllText}>See all</Text>
+                </TouchableOpacity>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+                {workouts.filter(w => w.premium).slice(0, 5).map(workout => (
+                  <View key={workout.id} style={styles.workoutCardWrapper}>
+                    <WorkoutCard 
+                      workout={workout} 
+                      size="small"
+                      onPress={() => handleWorkoutPress(workout.id)}
+                    />
+                  </View>
+                ))}
+              </ScrollView>
             </View>
 
             {/* All Workouts Preview */}
@@ -423,6 +494,8 @@ export default function HomeScreen() {
         {/* Bottom padding */}
         <View style={styles.bottomPadding} />
       </ScrollView>
+
+     
     </SafeAreaView>
   );
 }
@@ -834,6 +907,15 @@ const styles = StyleSheet.create({
     color: '#FF4500',
     fontWeight: '700',
   },
+  premiumCard: {
+    borderWidth: 2,
+    borderColor: '#FFD700',
+    backgroundColor: 'rgba(255, 215, 0, 0.05)',
+  },
+  quickActionPremiumTitle: {
+    color: '#FFD700',
+    fontWeight: '700',
+  },
   quickActionSubtitle: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
@@ -984,164 +1066,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
     color: '#DC2626',
   },
-  // Premium Quick-Start Card Styles
-  premiumQuickStartCard: {
-    marginHorizontal: 20,
-    marginTop: 8,
-    borderRadius: 24,
-    overflow: 'hidden',
-    shadowColor: '#FF6B35',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    elevation: 16,
-  },
-  premiumCardBackground: {
-    backgroundColor: '#FF6B35',
-    position: 'relative',
-    padding: 28,
-  },
-  premiumCloseButton: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  premiumBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  premiumBadgeText: {
-    fontSize: 11,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-    letterSpacing: 1,
-  },
-  premiumContent: {
-    flex: 1,
-  },
-  premiumHeaderSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  premiumIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  premiumTitleContainer: {
-    flex: 1,
-  },
-  premiumTitle: {
-    fontSize: 24,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-    marginBottom: 4,
-    lineHeight: 28,
-  },
-  premiumSubtitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    color: 'rgba(255, 255, 255, 0.8)',
-    lineHeight: 20,
-  },
-  premiumDescription: {
-    fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: 'rgba(255, 255, 255, 0.9)',
-    lineHeight: 24,
-    marginBottom: 28,
-  },
-  premiumStatsContainer: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 28,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  premiumStatItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  premiumStatIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  premiumStatNumber: {
-    fontSize: 24,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  premiumStatLabel: {
-    fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
-  },
-  premiumStatDivider: {
-    width: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    marginHorizontal: 16,
-  },
-  premiumCTAButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  premiumCTAContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  premiumCTAText: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
-  },
-  premiumFooter: {
-    alignItems: 'center',
-  },
-  premiumFooterText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
   // Mini Quick-Start Card Styles
   miniQuickStartCard: {
     marginHorizontal: 20,
@@ -1223,5 +1147,29 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Inter-Medium',
     color: '#6B7280',
+  },
+  seeAllText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#FF6B35',
+  },
+  workoutCardWrapper: {
+    width: 280,
+    marginRight: 16,
+  },
+  quickActionPremiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFD700',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 8,
+    gap: 4,
+  },
+  quickActionPremiumBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Inter-Bold',
+    color: '#000',
   },
 });

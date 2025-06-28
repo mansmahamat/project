@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { Calendar, TrendingUp, Target, Flame, Clock, Trophy, Award, Zap, Activity, CalendarDays } from 'lucide-react-native';
+import { Calendar, TrendingUp, Target, Flame, Clock, Trophy, Award, Zap, Activity, CalendarDays, Lock, Crown } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserProgress } from '@/types/workout';
 import { useProgressStore, formatTime, getStreakEmoji, getAvailableAchievements } from '@/stores';
@@ -18,8 +18,142 @@ import { GamificationButton } from '@/components/GamificationButton';
 import { GamificationDashboard } from '@/components/GamificationDashboard';
 import { HapticFeedback } from '@/utils/haptics';
 import { useButtonPress, useProgressAnimation } from '@/utils/animations';
+import { RevenueCatContext } from '@/hooks/useRevenueCat';
+import Paywall from '@/components/payment/paywall';
 
 const { width } = Dimensions.get('window');
+
+// Fake Calendar Teaser for Non-Premium Users
+const FakeCalendarTeaser = ({ onUpgrade }: { onUpgrade: () => void }) => {
+  // Fake impressive calendar data
+  const fakeCalendarData = [
+    { date: '2025-01-15', workouts: 2, calories: 420, type: 'HIIT' },
+    { date: '2025-01-14', workouts: 1, calories: 180, type: 'Fundamentals' },
+    { date: '2025-01-13', workouts: 3, calories: 580, type: 'Power' },
+    { date: '2025-01-12', workouts: 1, calories: 240, type: 'Defense' },
+    { date: '2025-01-11', workouts: 2, calories: 390, type: 'Combos' },
+    { date: '2025-01-10', workouts: 1, calories: 200, type: 'Footwork' },
+    { date: '2025-01-09', workouts: 2, calories: 450, type: 'Premium' },
+  ];
+
+  const fakeStats = {
+    thisWeek: 12,
+    thisMonth: 47,
+    totalCalories: 8420,
+    currentStreak: 18,
+    avgPerDay: 1.7,
+    bestWeek: 15
+  };
+
+  return (
+    <TouchableOpacity 
+      style={styles.fakeCalendarContainer}
+      onPress={() => {
+        console.log('🟢 Calendar section clicked - opening paywall!');
+        HapticFeedback.medium();
+        onUpgrade();
+      }}
+      activeOpacity={0.8}
+    >
+      {/* Header with Premium Badge */}
+      <View style={styles.fakeCalendarHeader}>
+        <View style={styles.headerLeft}>
+          <CalendarDays size={24} color="#FF6B35" />
+          <Text style={styles.fakeCalendarTitle}>Workout Calendar</Text>
+        </View>
+        <View style={styles.premiumCalendarBadge}>
+          <Crown size={12} color="#fff" />
+          <Text style={styles.premiumBadgeText}>PREMIUM</Text>
+        </View>
+      </View>
+
+      {/* Fake Calendar Grid */}
+      <View style={styles.calendarPreview}>
+        <Text style={styles.monthLabel}>January 2025</Text>
+        
+        {/* Days of week header */}
+        <View style={styles.weekHeader}>
+          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+            <Text key={day} style={styles.dayHeader}>{day}</Text>
+          ))}
+        </View>
+
+        {/* Calendar Grid with fake workout dots */}
+        <View style={styles.calendarGrid}>
+          {Array.from({length: 35}, (_, i) => {
+            const dayNumber = i - 5; // Start from day 1
+            const hasWorkout = dayNumber > 0 && dayNumber <= 20 && Math.random() > 0.6;
+            
+            return (
+              <View key={i} style={styles.calendarDay}>
+                {dayNumber > 0 && dayNumber <= 31 && (
+                  <>
+                    <Text style={[styles.dayNumber, hasWorkout && styles.workoutDay]}>
+                      {dayNumber}
+                    </Text>
+                    {hasWorkout && <View style={styles.workoutDot} />}
+                  </>
+                )}
+              </View>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* Fake Stats Summary */}
+      <View style={styles.fakeStatsRow}>
+        <View style={styles.fakeStatItem}>
+          <Text style={styles.fakeStatValue}>{fakeStats.thisWeek}</Text>
+          <Text style={styles.fakeStatLabel}>This Week</Text>
+        </View>
+        <View style={styles.fakeStatItem}>
+          <Text style={styles.fakeStatValue}>{fakeStats.currentStreak}</Text>
+          <Text style={styles.fakeStatLabel}>Day Streak</Text>
+        </View>
+        <View style={styles.fakeStatItem}>
+          <Text style={styles.fakeStatValue}>{fakeStats.avgPerDay}</Text>
+          <Text style={styles.fakeStatLabel}>Avg/Day</Text>
+        </View>
+      </View>
+
+      {/* Premium Features */}
+      <View style={styles.premiumFeatures}>
+        <Text style={styles.featuresTitle}>✨ Calendar Premium Features</Text>
+        <View style={styles.featureRow}>
+          <View style={styles.featureItem}>
+            <Target size={14} color="#FF6B35" />
+            <Text style={styles.featureText}>Workout History</Text>
+          </View>
+          <View style={styles.featureItem}>
+            <Flame size={14} color="#FFB800" />
+            <Text style={styles.featureText}>Calorie Tracking</Text>
+          </View>
+        </View>
+        <View style={styles.featureRow}>
+          <View style={styles.featureItem}>
+            <Trophy size={14} color="#8B5CF6" />
+            <Text style={styles.featureText}>Streak Tracking</Text>
+          </View>
+          <View style={styles.featureItem}>
+            <TrendingUp size={14} color="#00D4AA" />
+            <Text style={styles.featureText}>Progress Analytics</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* CTA Message */}
+      <View style={styles.ctaMessage}>
+        <Crown size={24} color="#FF6B35" />
+        <Text style={styles.ctaText}>Tap anywhere to unlock Calendar Tracking</Text>
+      </View>
+
+      {/* Subtle overlay - non-blocking */}
+      <View style={[styles.calendarOverlay, { pointerEvents: 'none' }]}>
+        <Lock size={24} color="rgba(255, 255, 255, 0.8)" />
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 export default function ProgressScreen() {
   const { 
@@ -34,6 +168,7 @@ export default function ProgressScreen() {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('week');
   const [viewMode, setViewMode] = useState<'stats' | 'calendar'>('stats');
   const [showGamification, setShowGamification] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   // Get real stats based on selected period
   const weeklyStats = getWeeklyStats();
@@ -41,6 +176,22 @@ export default function ProgressScreen() {
   const todayStats = getTodayStats();
   const recentWorkouts = getRecentWorkouts(7);
   const weeklyGoal = getWeeklyGoalProgress();
+
+  // Get RevenueCat subscription status
+  const { customerInfo } = useContext(RevenueCatContext);
+  const activeEntitlements = customerInfo?.activeSubscriptions;
+  const isPro = !!activeEntitlements?.length;
+
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 Progress Screen Debug:', {
+      isPro,
+      showPaywall,
+      viewMode,
+      customerInfo: !!customerInfo,
+      activeSubscriptions: activeEntitlements?.length || 0
+    });
+  }, [isPro, showPaywall, viewMode, customerInfo, activeEntitlements]);
 
   // Generate weekly chart data from recent workouts
   const generateWeeklyData = () => {
@@ -380,7 +531,11 @@ export default function ProgressScreen() {
           </>
         ) : (
           /* Calendar View */
-          <WorkoutCalendar />
+          isPro ? (
+            <WorkoutCalendar />
+          ) : (
+            <FakeCalendarTeaser onUpgrade={() => setShowPaywall(true)} />
+          )
         )}
 
         <View style={styles.bottomPadding} />
@@ -391,6 +546,22 @@ export default function ProgressScreen() {
         visible={showGamification} 
         onClose={() => setShowGamification(false)} 
       />
+
+      {/* RevenueCat Paywall Modal */}
+      {showPaywall && (
+        <View style={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          zIndex: 1000 
+        }}>
+          <Paywall 
+            onClose={() => setShowPaywall(false)} 
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -745,5 +916,190 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 40,
+  },
+  fakeCalendarContainer: {
+    position: 'relative',
+    backgroundColor: '#F8FAFC',
+    margin: 16,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 2,
+    borderColor: '#FFD700',
+    overflow: 'hidden',
+  },
+  fakeCalendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  fakeCalendarTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#111827',
+  },
+  premiumCalendarBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FF6B35',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  premiumBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Inter-Bold',
+    color: '#fff',
+  },
+  calendarPreview: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  monthLabel: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#111827',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  weekHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 12,
+  },
+  dayHeader: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#6B7280',
+    textAlign: 'center',
+    width: 32,
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  calendarDay: {
+    width: '14.28%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  dayNumber: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  workoutDay: {
+    color: '#fff',
+    backgroundColor: '#FF6B35',
+    borderRadius: 16,
+    width: 32,
+    height: 32,
+    lineHeight: 32,
+    textAlign: 'center',
+  },
+  workoutDot: {
+    position: 'absolute',
+    bottom: 4,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#FF6B35',
+  },
+  fakeStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  fakeStatItem: {
+    alignItems: 'center',
+  },
+  fakeStatValue: {
+    fontSize: 20,
+    fontFamily: 'Inter-Bold',
+    color: '#FF6B35',
+    marginBottom: 4,
+  },
+  fakeStatLabel: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  premiumFeatures: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  featuresTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: '#111827',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  featureRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  featureText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#6B7280',
+  },
+  ctaMessage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    backgroundColor: '#FFF7ED',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+    gap: 8,
+  },
+  ctaText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Bold',
+    color: '#FF6B35',
+  },
+  calendarOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

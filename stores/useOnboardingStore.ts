@@ -19,12 +19,14 @@ interface OnboardingState {
   isOnboardingComplete: boolean;
   userProfile: UserProfile | null;
   isLoading: boolean;
+  shouldShowPaywallAfterOnboarding: boolean;
 
   // Actions
   setLoading: (loading: boolean) => void;
   completeOnboarding: (profile: UserProfile) => void;
   updateUserProfile: (profile: UserProfile) => void;
   resetOnboarding: () => void;
+  setShouldShowPaywallAfterOnboarding: (show: boolean) => void;
   
   // Computed values
   calculateBMR: () => number | null;
@@ -42,6 +44,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       isOnboardingComplete: false,
       userProfile: null,
       isLoading: false,
+      shouldShowPaywallAfterOnboarding: false,
 
       // Actions
       setLoading: (loading: boolean) => {
@@ -55,7 +58,8 @@ export const useOnboardingStore = create<OnboardingState>()(
         const newState = { 
           isOnboardingComplete: true, 
           userProfile: profile,
-          isLoading: false 
+          isLoading: false,
+          shouldShowPaywallAfterOnboarding: true
         };
         
         console.log('🎯 Zustand: NEW STATE:', newState);
@@ -66,7 +70,8 @@ export const useOnboardingStore = create<OnboardingState>()(
           const currentState = get();
           console.log('🎯 Zustand: VERIFICATION - Current state after completion:', {
             isOnboardingComplete: currentState.isOnboardingComplete,
-            hasProfile: !!currentState.userProfile
+            hasProfile: !!currentState.userProfile,
+            shouldShowPaywall: currentState.shouldShowPaywallAfterOnboarding
           });
         }, 100);
       },
@@ -80,8 +85,13 @@ export const useOnboardingStore = create<OnboardingState>()(
         set({ 
           isOnboardingComplete: false, 
           userProfile: null,
-          isLoading: false 
+          isLoading: false,
+          shouldShowPaywallAfterOnboarding: false
         });
+      },
+
+      setShouldShowPaywallAfterOnboarding: (show: boolean) => {
+        set({ shouldShowPaywallAfterOnboarding: show });
       },
 
       // Computed values
@@ -199,6 +209,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       partialize: (state) => ({
         isOnboardingComplete: state.isOnboardingComplete,
         userProfile: state.userProfile,
+        shouldShowPaywallAfterOnboarding: state.shouldShowPaywallAfterOnboarding,
       }),
     }
   )

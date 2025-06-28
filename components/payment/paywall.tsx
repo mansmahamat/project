@@ -1,8 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Alert, ScrollView, Dimensions } from 'react-native';
+import { Calendar, TrendingUp, Target, Flame, Clock, Trophy, Award, Zap, Activity, CalendarDays, Lock, Crown } from 'lucide-react-native';
 import RevenueCatUI, { type FullScreenPaywallViewOptions } from "react-native-purchases-ui";
 import { type CustomerInfo, type PurchasesError, type PurchasesPackage, type PurchasesStoreTransaction } from "react-native-purchases";
 import { useSimpleToast } from "@/hooks/useSimpleToast";
+
+const { width } = Dimensions.get('window');
 
 interface PaywallProps {
   onClose: () => void;
@@ -34,7 +37,7 @@ class PaywallErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    console.error('🚨 PaywallModal Error:', error, errorInfo);
+    console.error('🚨 Paywall Error:', error, errorInfo);
     Alert.alert('Paywall Error', `Failed to load paywall: ${error.message}`);
   }
 
@@ -57,12 +60,12 @@ class PaywallErrorBoundary extends React.Component<
   }
 }
 
-const PaywallModal = ({ onClose, ...paywallProps }: PaywallProps) => {
+const Paywall = ({ onClose, ...paywallProps }: PaywallProps) => {
   const { showToast } = useSimpleToast();
   const [paywallReady, setPaywallReady] = React.useState(false);
 
   React.useEffect(() => {
-    console.log('🚀 PaywallModal component mounted');
+    console.log('🚀 Paywall component mounted');
     
     // Test RevenueCat UI availability
     try {
@@ -75,7 +78,7 @@ const PaywallModal = ({ onClose, ...paywallProps }: PaywallProps) => {
     }
 
     return () => {
-      console.log('🧹 PaywallModal component unmounted');
+      console.log('🧹 Paywall component unmounted');
     };
   }, []);
 
@@ -87,7 +90,7 @@ const PaywallModal = ({ onClose, ...paywallProps }: PaywallProps) => {
 
   const handlePurchaseCompleted = ({ customerInfo, storeTransaction }: { customerInfo: CustomerInfo, storeTransaction: PurchasesStoreTransaction }) => {
     console.log('✅ Purchase completed successfully');
-    showToast('success', 'Welcome to VibeBoxing Premium! 🥊');
+    showToast('success', 'Welcome to Premium! 🎉');
     paywallProps.onPurchaseCompleted?.({ customerInfo, storeTransaction });
     onClose();
   }
@@ -106,7 +109,7 @@ const PaywallModal = ({ onClose, ...paywallProps }: PaywallProps) => {
   }
 
   const handleDismiss = () => {
-    console.log('👋 PaywallModal dismissed');
+    console.log('👋 Paywall dismissed');
     onClose();
   }
 
@@ -116,7 +119,7 @@ const PaywallModal = ({ onClose, ...paywallProps }: PaywallProps) => {
     onClose();
   }
 
-  console.log('🎨 Rendering PaywallModal component, ready:', paywallReady);
+  console.log('🎨 Rendering Paywall component, ready:', paywallReady);
 
   if (!paywallReady) {
     return (
@@ -132,11 +135,7 @@ const PaywallModal = ({ onClose, ...paywallProps }: PaywallProps) => {
   return (
     <PaywallErrorBoundary onError={onClose}>
       <View style={styles.container}>
-        {/* Debug overlay */}
-        <View style={styles.debugOverlay}>
-          <Text style={styles.debugText}>🚀 PaywallModal Loaded Successfully</Text>
-        </View>
-        
+        {/* RevenueCat Paywall - Full Screen */}
         <RevenueCatUI.Paywall
           onDismiss={handleDismiss}
           onPurchaseCancelled={handlePurchaseCancelled}
@@ -158,7 +157,175 @@ const PaywallModal = ({ onClose, ...paywallProps }: PaywallProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
+  // Premium Teaser Styles
+  premiumTeaserContainer: {
+    position: 'relative',
+    backgroundColor: '#F8FAFC',
+    margin: 16,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 2,
+    borderColor: '#FFD700',
+    overflow: 'hidden',
+  },
+  teaserHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  teaserTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#111827',
+  },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FF6B35',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  premiumBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Inter-Bold',
+    color: '#fff',
+  },
+  fakeStatsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 20,
+  },
+  fakeStatCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  fakeStatValue: {
+    fontSize: 24,
+    fontFamily: 'Inter-Bold',
+    color: '#111827',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  fakeStatLabel: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  chartSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  chartTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#111827',
+    marginBottom: 12,
+  },
+  fakeChart: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    height: 60,
+  },
+  chartColumn: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  chartBar: {
+    width: 12,
+    backgroundColor: '#FF6B35',
+    borderRadius: 6,
+    marginBottom: 8,
+    minHeight: 8,
+  },
+  chartLabel: {
+    fontSize: 10,
+    fontFamily: 'Inter-Medium',
+    color: '#6B7280',
+  },
+  featuresSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  featuresTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#111827',
+    marginBottom: 12,
+  },
+  featuresList: {
+    gap: 8,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  featureText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#374151',
+  },
+  ctaSection: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  ctaText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  ctaSubtext: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  lockedOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+  },
+  // Original styles
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -231,4 +398,6 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PaywallModal;
+
+
+export default Paywall; 

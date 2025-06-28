@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   View,
   Text,
@@ -30,10 +30,32 @@ import {
   CustomMove,
   CustomExercise 
 } from '@/stores/useCustomWorkoutStore';
+import { RevenueCatContext } from '@/hooks/useRevenueCat';
 
 export default function CustomWorkoutCreateScreen() {
   const router = useRouter();
   const addCustomWorkout = useCustomWorkoutStore((state) => state.addCustomWorkout);
+  
+  // Premium check
+  const { customerInfo } = useContext(RevenueCatContext);
+  const activeEntitlements = customerInfo?.activeSubscriptions;
+  const isPro = !!activeEntitlements?.length;
+
+  // Redirect non-premium users
+  useEffect(() => {
+    if (!isPro) {
+      Alert.alert(
+        'Premium Feature',
+        'Custom workouts are a premium feature. Please upgrade to create custom workouts.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.back()
+          }
+        ]
+      );
+    }
+  }, [isPro, router]);
 
   // Workout Settings
   const [workoutName, setWorkoutName] = useState('');
@@ -148,13 +170,14 @@ export default function CustomWorkoutCreateScreen() {
       title: workoutName,
       description: workoutDescription,
       level: workoutLevel,
-      category: 'Custom' as const,
+      category: 'Freestyle' as const,
       duration: Math.round((totalRounds * roundDuration + (totalRounds - 1) * restBetweenRounds) / 60),
       rounds: totalRounds,
       restPeriod: restBetweenRounds,
       calories: calculateEstimatedCalories(),
       equipment: [] as string[],
       imageUrl: 'https://images.pexels.com/photos/4761671/pexels-photo-4761671.jpeg',
+      isCustom: true as const,
       exercises
     };
 

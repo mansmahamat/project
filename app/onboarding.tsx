@@ -2,19 +2,25 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
-  TouchableOpacity,
   StyleSheet,
+  TouchableOpacity,
   SafeAreaView,
+  ScrollView,
   TextInput,
-  Dimensions,
   Alert,
 } from 'react-native';
+import { 
+  User, 
+  Ruler, 
+  HandMetal, 
+  Trophy, 
+  Target,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, ChevronRight, User, Ruler, Weight, HandMetal, Trophy, Target } from 'lucide-react-native';
-import { useOnboardingStore, useNavigationStore, UserProfile } from '@/stores';
-
-const { width } = Dimensions.get('window');
+import { useOnboardingStore, useNavigationStore } from '@/stores';
+import type { UserProfile } from '@/stores/useOnboardingStore';
 
 interface LocalUserProfile {
   gender: 'male' | 'female' | 'other' | '';

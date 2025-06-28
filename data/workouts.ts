@@ -784,7 +784,7 @@ export const workouts: Workout[] = [
     restPeriod: 75, // Longer rest for beginners (1:15)
     calories: 180, // Realistic for beginner intensity
     equipment: [],
-    imageUrl: 'https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg',
+    imageUrl: 'https://images.pexels.com/photos/163403/box-sport-men-training-163403.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     featured: true,
     exercises: [
       {
@@ -842,7 +842,7 @@ export const workouts: Workout[] = [
     restPeriod: 0, // Continuous lesson format
     calories: 150,
     equipment: [],
-    imageUrl: 'https://images.pexels.com/photos/7991580/pexels-photo-7991580.jpeg',
+    imageUrl: 'https://images.pexels.com/photos/1608099/pexels-photo-1608099.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     featured: true,
     exercises: [
       {
@@ -1045,7 +1045,7 @@ export const workouts: Workout[] = [
     restPeriod: 60, // Standard 1 minute rest
     calories: 320, // Higher intensity = more calories
     equipment: [],
-    imageUrl: 'https://images.pexels.com/photos/7991622/pexels-photo-7991622.jpeg',
+    imageUrl: 'https://images.pexels.com/photos/927437/pexels-photo-927437.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     popular: true,
     exercises: [
       {
@@ -1117,7 +1117,7 @@ export const workouts: Workout[] = [
     restPeriod: 75, // Beginner rest period
     calories: 160,
     equipment: [],
-    imageUrl: 'https://images.pexels.com/photos/7991580/pexels-photo-7991580.jpeg',
+    imageUrl: 'https://images.pexels.com/photos/1575381/pexels-photo-1575381.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     exercises: [
       {
         id: '3-1',
@@ -1172,7 +1172,7 @@ export const workouts: Workout[] = [
     restPeriod: 45, // Shorter rest for advanced athletes
     calories: 380,
     equipment: [],
-    imageUrl: 'https://images.pexels.com/photos/7991621/pexels-photo-7991621.jpeg',
+    imageUrl: 'https://images.pexels.com/photos/1544774/pexels-photo-1544774.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     exercises: [
       {
         id: '4-1',
@@ -1257,7 +1257,7 @@ export const workouts: Workout[] = [
     restPeriod: 60,
     calories: 380, // High calorie burn due to heavy bag work
     equipment: ['Heavy Bag', 'Hand Wraps', 'Boxing Gloves'],
-    imageUrl: 'https://images.pexels.com/photos/7991623/pexels-photo-7991623.jpeg',
+    imageUrl: 'https://images.pexels.com/photos/4162449/pexels-photo-4162449.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     featured: true,
     exercises: [
       {
@@ -1329,7 +1329,7 @@ export const workouts: Workout[] = [
     restPeriod: 45, // Professional-style short rest
     calories: 450,
     equipment: [],
-    imageUrl: 'https://images.pexels.com/photos/7991624/pexels-photo-7991624.jpeg',
+    imageUrl: 'https://images.pexels.com/photos/2600493/pexels-photo-2600493.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     popular: true,
     exercises: [
       {
@@ -1559,7 +1559,7 @@ export const workouts: Workout[] = [
     restPeriod: 75, // Beginner rest period
     calories: 170,
     equipment: [],
-    imageUrl: 'https://images.pexels.com/photos/7991625/pexels-photo-7991625.jpeg',
+    imageUrl: 'https://images.pexels.com/photos/1938126/pexels-photo-1938126.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     exercises: [
       {
         id: '7-1',
@@ -1616,7 +1616,7 @@ export const workouts: Workout[] = [
     restPeriod: 75,
     calories: 185,
     equipment: [],
-    imageUrl: 'https://images.pexels.com/photos/7991630/pexels-photo-7991630.jpeg',
+    imageUrl: 'https://images.pexels.com/photos/2261477/pexels-photo-2261477.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     exercises: [
       {
         id: '8-1',
@@ -1673,7 +1673,7 @@ export const workouts: Workout[] = [
     restPeriod: 60,
     calories: 280,
     equipment: [],
-    imageUrl: 'https://images.pexels.com/photos/7991627/pexels-photo-7991627.jpeg',
+    imageUrl: 'https://images.pexels.com/photos/1756484/pexels-photo-1756484.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
     exercises: [
       {
         id: '9-1',

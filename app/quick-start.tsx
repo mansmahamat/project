@@ -37,8 +37,8 @@ export default function QuickStartScreen() {
   const [freestyleCalloutTime, setFreestyleCalloutTime] = useState(0);
   const [completedInstructions, setCompletedInstructions] = useState<Set<number>>(new Set());
   
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const freestyleIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const freestyleIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
 
   // Flatten all instructions with global indexing

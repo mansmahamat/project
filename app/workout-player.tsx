@@ -14,12 +14,15 @@ import { workouts } from '@/data/workouts';
 import { Workout, Exercise } from '@/types/workout';
 import { PunchSequenceDisplay } from '@/components/PunchSequenceDisplay';
 import { useProgressStore, useOnboardingStore } from '@/stores';
+import { useCustomWorkoutStore, CustomWorkout } from '@/stores/useCustomWorkoutStore';
 
 export default function WorkoutPlayerScreen() {
   const { id } = useLocalSearchParams();
   const { completeWorkout } = useProgressStore();
   const { calculateWorkoutCalories } = useOnboardingStore();
-  const [workout, setWorkout] = useState<Workout | null>(null);
+  const { getCustomWorkout } = useCustomWorkoutStore();
+  
+  const [workout, setWorkout] = useState<Workout | CustomWorkout | null>(null);
   const [currentRound, setCurrentRound] = useState(1);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(0);
@@ -33,16 +36,61 @@ export default function WorkoutPlayerScreen() {
   const intervalRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
 
+  // Type guard to check if it's a custom workout
+  const isCustomWorkout = (workout: Workout | CustomWorkout): workout is CustomWorkout => {
+    return 'isCustom' in workout && workout.isCustom === true;
+  };
+
+  // Helper function to get punch sequence from exercise
+  const getPunchSequence = (exercise: Exercise | any): number[] | undefined => {
+    if (isCustomWorkout(workout!)) {
+      // For custom workouts, get punch sequence from selected moves
+      const customExercise = exercise as any;
+      if (customExercise.selectedMoves) {
+        const firstMove = customExercise.selectedMoves.find((move: any) => move.punchSequence);
+        return firstMove?.punchSequence;
+      }
+      return undefined;
+    } else {
+      // For regular workouts
+      return exercise.punchSequence;
+    }
+  };
+
+  // Helper function to get exercise instructions
+  const getExerciseInstructions = (exercise: Exercise | any): string[] => {
+    if (isCustomWorkout(workout!)) {
+      // For custom workouts, generate instructions from selected moves
+      const customExercise = exercise as any;
+      if (customExercise.selectedMoves) {
+        return customExercise.selectedMoves.map((move: any) => `• ${move.description}`);
+      }
+      return ['• Follow the displayed moves', '• Maintain proper form', '• Keep breathing steady'];
+    } else {
+      // For regular workouts
+      return exercise.instructions || [];
+    }
+  };
+
   useEffect(() => {
     if (id) {
-      const foundWorkout = workouts.find(w => w.id === id);
+      // First check regular workouts
+      let foundWorkout: Workout | CustomWorkout | undefined = workouts.find(w => w.id === id);
+      
+      // If not found, check custom workouts
+      if (!foundWorkout) {
+        foundWorkout = getCustomWorkout(id as string);
+      }
+      
       if (foundWorkout) {
         setWorkout(foundWorkout);
-        setTimeRemaining(foundWorkout.exercises[0]?.duration || 180); // Default to 3 minutes
+        // For custom workouts, use the first exercise duration, or default to 3 minutes
+        const firstExerciseDuration = foundWorkout.exercises?.[0]?.duration || 180;
+        setTimeRemaining(firstExerciseDuration);
         startTimeRef.current = Date.now();
       }
     }
-  }, [id]);
+  }, [id, getCustomWorkout]);
 
   useEffect(() => {
     if (isPlaying && timeRemaining > 0) {
@@ -59,9 +107,10 @@ export default function WorkoutPlayerScreen() {
         // Update punch progression for combo exercises
         if (!isResting && workout) {
           const currentExercise = workout.exercises[currentExerciseIndex];
-          if (currentExercise.punchSequence && currentExercise.punchSequence.length > 0) {
+          const punchSequence = getPunchSequence(currentExercise);
+          if (punchSequence && punchSequence.length > 0) {
             const exerciseDuration = currentExercise.duration;
-            const punchCount = currentExercise.punchSequence.length;
+            const punchCount = punchSequence.length;
             const timePerPunch = exerciseDuration / (punchCount * 3); // Multiple repetitions
             const elapsedTime = exerciseDuration - timeRemaining;
             const newPunchIndex = Math.floor(elapsedTime / timePerPunch) % punchCount;
@@ -341,21 +390,24 @@ export default function WorkoutPlayerScreen() {
             <Text style={styles.exerciseName}>{currentExercise.name}</Text>
             <Text style={styles.exerciseDescription}>{currentExercise.description}</Text>
             
-            {currentExercise.punchSequence && currentExercise.punchSequence.length > 0 && (
-              <View style={styles.sequenceContainer}>
-                <PunchSequenceDisplay 
-                  sequence={currentExercise.punchSequence} 
-                  size="large" 
-                  showNumbers={true}
-                  currentPunch={currentPunchIndex}
-                />
-              </View>
-            )}
+            {(() => {
+              const punchSequence = getPunchSequence(currentExercise);
+              return punchSequence && punchSequence.length > 0 && (
+                <View style={styles.sequenceContainer}>
+                  <PunchSequenceDisplay 
+                    sequence={punchSequence} 
+                    size="large" 
+                    showNumbers={true}
+                    currentPunch={currentPunchIndex}
+                  />
+                </View>
+              );
+            })()}
             
             <View style={styles.instructions}>
-              {currentExercise.instructions.slice(0, 3).map((instruction, index) => (
+              {getExerciseInstructions(currentExercise).map((instruction, index) => (
                 <Text key={index} style={styles.instructionText}>
-                  • {instruction}
+                  {instruction}
                 </Text>
               ))}
             </View>

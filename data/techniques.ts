@@ -234,7 +234,7 @@ export const TECHNIQUE_REFERENCES: TechniqueReference[] = [
     name: 'Slipping',
     category: 'Defense',
     description: 'A lateral movement where you slightly shift your head to either side to make a punch miss',
-    demoVideoURL: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+    demoVideoURL: 'https://boyegcsxgufnheudjjyj.supabase.co/storage/v1/object/public/video-demo//How%20To%20Slip%20Punches%20_%20Beginner%20Boxing%20Defense%20Training.mp4',
     instructions: [
       'Slight bend at waist',
       'Move head to outside of punch',
@@ -254,7 +254,7 @@ export const TECHNIQUE_REFERENCES: TechniqueReference[] = [
     name: 'Roll',
     category: 'Defense',
     description: 'A defensive movement where you bend your knees and move your head under a punch to avoid it',
-    demoVideoURL: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+    demoVideoURL: 'https://boyegcsxgufnheudjjyj.supabase.co/storage/v1/object/public/video-demo//How%20to%20Roll%20a%20Punch%20in%20Boxing%20_%20Defense%20101.mp4',
     instructions: [
       'Bend at knees and waist',
       'Keep hands up',
@@ -274,7 +274,7 @@ export const TECHNIQUE_REFERENCES: TechniqueReference[] = [
     name: 'Dodge',
     category: 'Defense',
     description: 'A quick defensive movement to get completely out of range of an oncoming punch',
-    demoVideoURL: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
+    demoVideoURL: 'https://boyegcsxgufnheudjjyj.supabase.co/storage/v1/object/public/video-demo//How%20To%20Dodge%20Punches%20_%204%20Drills%20For%20Boxing%20Head%20movement.mp4',
     instructions: [
       'Step back or to the side',
       'Keep hands up',
@@ -294,7 +294,7 @@ export const TECHNIQUE_REFERENCES: TechniqueReference[] = [
     name: 'Stance',
     category: 'Footwork',
     description: 'One foot forward, hands to the chin',
-    demoVideoURL: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+    demoVideoURL: "https://boyegcsxgufnheudjjyj.supabase.co/storage/v1/object/public/video-demo//5%20Boxing%20Stance%20Mistakes%20you%20Shouldn't%20Do.mp4",
     instructions: [
       'Lead foot forward, rear foot back',
       'Feet shoulder-width apart',
@@ -314,7 +314,7 @@ export const TECHNIQUE_REFERENCES: TechniqueReference[] = [
     name: 'Footwork',
     category: 'Footwork',
     description: 'Always stay in movement when training with the app. Remaining active and stable is trickier than you\'d think',
-    demoVideoURL: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+    demoVideoURL: 'https://boyegcsxgufnheudjjyj.supabase.co/storage/v1/object/public/video-demo//videoplayback.mp4',
     instructions: [
       'Stay on balls of feet',
       'Keep feet shoulder-width apart',
@@ -334,7 +334,7 @@ export const TECHNIQUE_REFERENCES: TechniqueReference[] = [
     name: 'Pivot',
     category: 'Footwork',
     description: 'Rotate on one foot to create angles',
-    demoVideoURL: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+    demoVideoURL: 'https://boyegcsxgufnheudjjyj.supabase.co/storage/v1/object/public/video-demo//videoplayback%20(1).mp4',
     instructions: [
       'Pivot on front foot',
       'Turn body to create new angle',
@@ -354,7 +354,7 @@ export const TECHNIQUE_REFERENCES: TechniqueReference[] = [
     name: 'Shifting',
     category: 'Footwork',
     description: 'Quickly change your angle to gain an advantage',
-    demoVideoURL: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
+    demoVideoURL: 'https://boyegcsxgufnheudjjyj.supabase.co/storage/v1/object/public/video-demo//videoplayback%20(2).mp4',
     instructions: [
       'Switch lead foot quickly',
       'Change stance temporarily',
@@ -374,7 +374,7 @@ export const TECHNIQUE_REFERENCES: TechniqueReference[] = [
     name: 'L Step',
     category: 'Footwork',
     description: 'Evade attacks and creates counter angles',
-    demoVideoURL: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+    demoVideoURL: 'https://boyegcsxgufnheudjjyj.supabase.co/storage/v1/object/public/video-demo//videoplayback%20(3).mp4',
     instructions: [
       'Step to the side at 90-degree angle',
       'Move off the opponent\'s centerline',
@@ -394,7 +394,7 @@ export const TECHNIQUE_REFERENCES: TechniqueReference[] = [
     name: 'Shadow Boxing Tips',
     category: 'Footwork',
     description: 'Keep moving, stay engaged',
-    demoVideoURL: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    demoVideoURL: 'https://boyegcsxgufnheudjjyj.supabase.co/storage/v1/object/public/video-demo//Quick%20Shadow%20Boxing%20Tutorial%20by%20Olympian.mp4',
     instructions: [
       'Visualize an opponent in front of you',
       'Move constantly - never static',

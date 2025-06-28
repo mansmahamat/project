@@ -11,6 +11,7 @@ import {
 } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
 import OnboardingGate from '@/components/OnboardingGate';
+import { RevenueCatProvider } from '@/hooks/useRevenueCat';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -35,24 +36,26 @@ export default function RootLayout() {
   }
 
   return (
-    <OnboardingGate>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="workout-detail" options={{ headerShown: false }} />
-        <Stack.Screen name="workout-player" options={{ headerShown: false }} />
-        <Stack.Screen name="timed-workout-player" options={{ headerShown: false }} />
+    <RevenueCatProvider>
+      <OnboardingGate>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="workout-detail" options={{ headerShown: false }} />
+          <Stack.Screen name="workout-player" options={{ headerShown: false }} />
+          <Stack.Screen name="timed-workout-player" options={{ headerShown: false }} />
 
-        <Stack.Screen name="quick-start" options={{ headerShown: false }} />
-        <Stack.Screen name="custom-workout" options={{ headerShown: false }} />
-        <Stack.Screen name="combos" options={{ headerShown: false }} />
-        <Stack.Screen name="combo-detail" options={{ headerShown: false }} />
-        <Stack.Screen name="combo-practice" options={{ headerShown: false }} />
-        <Stack.Screen name="punch-library" options={{ headerShown: false }} />
-        <Stack.Screen name="technique-detail" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="light" />
-    </OnboardingGate>
+          <Stack.Screen name="quick-start" options={{ headerShown: false }} />
+          <Stack.Screen name="custom-workout" options={{ headerShown: false }} />
+          <Stack.Screen name="combos" options={{ headerShown: false }} />
+          <Stack.Screen name="combo-detail" options={{ headerShown: false }} />
+          <Stack.Screen name="combo-practice" options={{ headerShown: false }} />
+          <Stack.Screen name="punch-library" options={{ headerShown: false }} />
+          <Stack.Screen name="technique-detail" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="light" />
+      </OnboardingGate>
+    </RevenueCatProvider>
   );
 }
